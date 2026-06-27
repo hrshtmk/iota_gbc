@@ -14,7 +14,7 @@ CPU::CPU() {
     #undef OP
     
     for (int i = 0; i < 256; i++) {
-        CBPrefixedTable[i] = &CPU::UnknownOP;
+        CBPrefixedTable[i] = &CPU::UnknownCBOP;
     }
 
     #define CB(hex) CBPrefixedTable[0x##hex] = &CPU::cb_##hex;

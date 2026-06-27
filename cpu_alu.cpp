@@ -195,3 +195,53 @@ void CPU::op_16(BUS &bus) { //LD D, u8
     D = Read8bitInline(bus);
     cycles += 8;
 }
+void CPU::cb_10(BUS &bus) { // RL B
+    uint8_t oldCarry = (F & 0x10) ? 1 : 0;
+    uint8_t newCarry = (B & 0x80) ? 0x10 : 0x00;
+
+    B = (B << 1) | oldCarry;
+
+    F = (B == 0 ? 0x80 : 0x00) | newCarry;
+
+    cycles += 8;
+}
+void CPU::op_17(BUS &bus){ // RLA
+    uint8_t oldCarry = (F & 0x10) ? 1 : 0;
+    uint8_t newCarry = (A & 0x80) ? 0x10 : 0x00;
+
+    A = (A << 1) | oldCarry;
+    F = newCarry;
+
+    cycles += 4;
+}
+void CPU::cb_13(BUS &bus){ // RL E
+    uint8_t oldCarry = (F & 0x10) ? 1 : 0;
+    uint8_t newCarry = (E & 0x80) ? 0x10 : 0x00;
+
+    E = (E << 1) | oldCarry;
+    uint8_t zero_flag = (E == 0) ? 0x80 : 0x00;
+    F = zero_flag | newCarry;
+
+    cycles += 8;
+}
+void CPU::op_15(BUS &bus){ // DEC D
+    uint8_t prev_D = D;
+    D--;
+    
+    uint8_t zero_flag = (D == 0) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x40;
+    uint8_t half_carry = ((prev_D & 0x0F) == 0x00) ? 0x20 : 0x00; 
+    
+    F = (F & 0x10) | zero_flag | subtract_flag | half_carry;
+    
+    cycles += 4;
+}
+void CPU::op_D1(BUS &bus){ // POP DE
+    E = bus.read(SP++);
+    D = bus.read(SP++);
+    cycles += 12;
+}
+void CPU::op_23(BUS &bus){ //INC HL
+    HL++;
+    cycles += 8;
+}
