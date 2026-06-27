@@ -1,4 +1,5 @@
 #include "cpu.hpp"
+#include <cstdint>
 
 void CPU::op_00(BUS &bus){ //NOP
     cycles += 4;
@@ -98,5 +99,33 @@ void CPU::op_C9(BUS &bus){ //RET
     
     cycles += 16;
 }
-// void CPU::op_XY(BUS &bus){
-// }
+void CPU::op_2F(BUS &bus){ //CPL
+    A = ~A;
+    F |= 0x40;
+    F |= 0x20;
+    
+    cycles += 4;
+}
+void CPU::op_0D(BUS &bus){ // DEC C
+    uint8_t prev_C = C;
+    C--;
+    
+    uint8_t zero_flag = (C == 0) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x40;
+    uint8_t half_carry = ((prev_C & 0x0F) == 0x00) ? 0x20 : 0x00; 
+    
+    F = (F & 0x10) | zero_flag | subtract_flag | half_carry;
+    
+    cycles += 4;
+}
+void CPU::op_20(BUS &bus){ //JR NZ, i8
+    int8_t offset = static_cast<int8_t>(Read8bitInline(bus));
+    bool condition_met = ((F & 0x80)==0);
+    if (condition_met) {
+        PC += offset;
+        cycles += 12;
+    } 
+    else {
+        cycles += 8;
+    }
+}
