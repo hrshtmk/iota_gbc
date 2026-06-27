@@ -168,3 +168,30 @@ void CPU::op_1A(BUS &bus) { //LD A, (DE)
     A = bus.read(DE);
     cycles += 8;
 }
+void CPU::op_E2(BUS &bus){ //LD (FF00+C), A
+    bus.write(0xFF00+C, A);
+    cycles += 8;
+}
+void CPU::op_0C(BUS &bus){ //INC C
+    uint8_t prev_C = C;
+    C++;
+    
+    uint8_t zero_flag = (C==0) ? 0x80 : 0x00;
+    uint8_t half_carry = ((prev_C & 0x0F) == 0x0F) ? 0x20 : 0x00;
+    F = (F & 0x10) | zero_flag | half_carry;
+    
+    cycles += 4;
+}
+void CPU::op_47(BUS &bus) { //LD B, A
+    B = A;
+    cycles += 4;
+}
+void CPU::op_D5(BUS &bus){ // PUSH DE
+    bus.write(--SP, D);
+    bus.write(--SP, E);
+    cycles += 16;
+}
+void CPU::op_16(BUS &bus) { //LD D, u8
+    D = Read8bitInline(bus);
+    cycles += 8;
+}
