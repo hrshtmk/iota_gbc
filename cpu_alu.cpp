@@ -1,3 +1,4 @@
+#include "bus.hpp"
 #include "cpu.hpp"
 #include <cstdint>
 
@@ -137,5 +138,33 @@ void CPU::cb_6C(BUS &bus) { // BIT 5, H
     uint8_t zero_flag = ((H & (1 << 5)) == 0) ? 0x80 : 0x00;
     F = (F & 0x10) | zero_flag | 0x20;
 
+    cycles += 8;
+}
+void CPU::op_28(BUS &bus){ //JR Z, i8
+    int8_t offset = static_cast<int8_t>(Read8bitInline(bus));
+    bool condition_met = ((F & 0x80) != 0);
+
+    if (condition_met) {
+        PC += offset;
+        cycles += 12;
+    }
+    else {
+        cycles += 8;
+    }
+}
+void CPU::op_26(BUS &bus){ //LD H, u8
+    H = Read8bitInline(bus);
+    cycles += 8;
+}
+void CPU::op_11(BUS &bus){ //LD DE, u16
+    DE = Read16bitInline(bus);
+    cycles += 12;
+}
+void CPU::op_4C(BUS &bus){ //LD C, H
+    C = H;
+    cycles += 4;
+}
+void CPU::op_1A(BUS &bus) { //LD A, (DE)
+    A = bus.read(DE);
     cycles += 8;
 }
