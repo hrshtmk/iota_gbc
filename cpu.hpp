@@ -13,14 +13,22 @@ class CPU{
     private:
         using OPDef = void (CPU::*)(BUS&);
         OPDef OPCodeTable[256];
+        OPDef CBPrefixedTable[256];
         void DBGprintAllOP(BUS &bus);
         uint16_t Read16bitInline(BUS &bus);
         uint8_t Read8bitInline(BUS &bus);
         void UnknownOP(BUS &bus);
+        void UnknownCBOP(BUS &bus);
 
+        // Unprifixed OPcodes.
         #define OP(hex) void op_##hex(BUS &bus);
         #include "opcodes.def"
         #undef OP
+
+        // CB Prefixed OPcodes.
+        #define CB(hex) void cb_##hex(BUS &bus);
+        #include "cb_opcodes.def"
+        #undef CB
         
         // Registers.
         union {

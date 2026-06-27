@@ -129,3 +129,13 @@ void CPU::op_20(BUS &bus){ //JR NZ, i8
         cycles += 8;
     }
 }
+void CPU::op_CB(BUS &bus) { //CB Prefix
+    uint8_t cb_opcode = Read8bitInline(bus);
+    (this->*CBPrefixedTable[cb_opcode])(bus);
+}
+void CPU::cb_6C(BUS &bus) { // BIT 5, H
+    uint8_t zero_flag = ((H & (1 << 5)) == 0) ? 0x80 : 0x00;
+    F = (F & 0x10) | zero_flag | 0x20;
+
+    cycles += 8;
+}
