@@ -256,7 +256,7 @@ void CPU::op_7B(BUS &bus){ //LD A, E
     cycles += 4;
 }
 void CPU::op_FE(BUS &bus){ //CP A, u8
-    uint8_t u8 = bus.read(PC);
+    uint8_t u8 = Read8bitInline(bus);
     uint8_t zero_flag = (A == u8) ? 0x80 : 0x00;
     uint8_t subtract_flag = 0x40;
     uint8_t half_carry = ((A & 0x0F) < (u8 & 0x0F)) ? 0x20 : 0x00;
@@ -265,9 +265,16 @@ void CPU::op_FE(BUS &bus){ //CP A, u8
 
     cycles += 8;
 }
-void CPU::op_34(BUS &bus){ //LD B, H
+void CPU::op_44(BUS &bus){ //LD B, H
     B = H;
     cycles += 4;
+}
+void CPU::op_34(BUS &bus){ // INC (HL)
+    uint8_t val = bus.read(HL);
+    uint8_t res = val + 1;
+    bus.write(HL, res);
+    F = (F & 0x10) | (res == 0 ? 0x80 : 0x00) | ((val & 0x0F) == 0x0F ? 0x20 : 0x00);
+    cycles += 12;
 }
 void CPU::op_06(BUS &bus){ //LD B, u8
     B = Read8bitInline(bus);
@@ -286,7 +293,7 @@ void CPU::op_05(BUS &bus){ //DEC B
     cycles += 4;
 }
 void CPU::op_E6(BUS &bus){ //AND A, u8
-    uint8_t u8 = bus.read(PC);
+    uint8_t u8 = Read8bitInline(bus);
     A = A & u8;
     uint8_t zero_flag = (A==0) ? 0x80 : 0x00;
     uint16_t half_carry = 0x20;
@@ -407,4 +414,22 @@ void CPU::op_19(BUS &bus) { // ADD HL, DE
 void CPU::op_02(BUS &bus){ //LD (BC), A
     bus.write(BC, A);
     cycles += 8;
+}
+void CPU::op_2E(BUS &bus){ // LD L, u8
+    L = Read8bitInline(bus);
+    cycles += 8;
+}
+void CPU::op_12(BUS &bus){ //LD (DE), A
+    bus.write(DE, A);
+    cycles += 8;
+}
+void CPU::op_2A(BUS &bus){ //LD A,(HL+)
+    A = bus.read(HL);
+    HL++;
+    cycles += 8;
+}
+void CPU::op_C5(BUS &bus){ // PUSH BC
+    bus.write(--SP, B);
+    bus.write(--SP, C);
+    cycles += 16;
 }
