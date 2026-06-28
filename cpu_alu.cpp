@@ -349,3 +349,62 @@ void CPU::cb_41(BUS &bus){ //BIT 0, C
 
     cycles += 8;
 }
+void CPU::op_79(BUS &bus){
+    A = C;
+    cycles += 4;
+}
+void CPU::op_18(BUS &bus){ //JR i8
+    uint8_t offset = static_cast<int8_t>(Read8bitInline(bus));
+    PC += offset;
+    cycles += 12;
+}
+void CPU::op_3D(BUS &bus){ //DEC A
+    uint8_t prev_A = A;
+    A--;
+    
+    uint8_t zero_flag = (A == 0) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x40;
+    uint8_t half_carry = ((prev_A & 0x0F) == 0x00) ? 0x20 : 0x00; 
+    
+    F = (F & 0x10) | zero_flag | subtract_flag | half_carry;
+    
+    cycles += 4;
+}
+void CPU::op_01(BUS &bus){ //LD BC, u16
+    BC = Read16bitInline(bus);
+    cycles += 12;
+}
+void CPU::op_09(BUS &bus) { // ADD HL, BC
+    uint32_t val1 = HL;
+    uint32_t val2 = BC;
+    uint32_t result = val1 + val2;
+
+    bool half_carry = ((val1 & 0x0FFF) + (val2 & 0x0FFF)) > 0x0FFF;
+    bool carry = result > 0xFFFF;
+
+    HL = static_cast<uint16_t>(result);
+    
+    F = (F & 0x80) | (half_carry ? 0x20 : 0x00) | (carry ? 0x10 : 0x00);
+
+    cycles += 8;
+}
+void CPU::op_19(BUS &bus) { // ADD HL, DE
+    uint32_t val1 = HL;
+    uint32_t val2 = DE;
+    uint32_t result = val1 + val2;
+
+    bool half_carry = ((val1 & 0x0FFF) + (val2 & 0x0FFF)) > 0x0FFF;
+    bool carry = result > 0xFFFF;
+
+    HL = static_cast<uint16_t>(result);
+
+    F = (F & 0x80) | 
+        (half_carry ? 0x20 : 0x00) | 
+        (carry      ? 0x10 : 0x00);
+
+    cycles += 8;
+}
+void CPU::op_02(BUS &bus){ //LD (BC), A
+    bus.write(BC, A);
+    cycles += 8;
+}
