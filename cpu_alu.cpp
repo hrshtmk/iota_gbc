@@ -433,3 +433,86 @@ void CPU::op_C5(BUS &bus){ // PUSH BC
     bus.write(--SP, C);
     cycles += 16;
 }
+void CPU::op_E5(BUS &bus){ // PUSH HL
+    bus.write(--SP, H);
+    bus.write(--SP, L);
+    cycles += 16;   
+}
+void CPU::op_1E(BUS &bus){ // LD E, u8
+    E = Read8bitInline(bus);
+    cycles += 8;
+}
+void CPU::op_4A(BUS &bus){ //LD C, D
+    C = D;
+    cycles += 4;
+}
+void CPU::op_E1(BUS &bus){ //POP HL
+    L = bus.read(SP++);
+    H = bus.read(SP++);
+    cycles += 12; 
+}
+void CPU::op_C1(BUS &bus){ //POP BC
+    C = bus.read(SP++);
+    B = bus.read(SP++);
+    cycles += 12; 
+}
+void CPU::op_BB(BUS &bus){ //CP A, E
+    uint8_t zero_flag = (A == E) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x40;
+    uint8_t half_carry = ((A & 0x0F) < (E & 0x0F)) ? 0x20 : 0x00;
+    uint8_t carry_flag = (A < E) ? 0x10 : 0x00;
+    F = zero_flag | subtract_flag | half_carry | carry_flag;
+
+    cycles += 4;
+}
+void CPU::op_EA(BUS &bus){ // LD (u16), A
+    uint16_t address = Read16bitInline(bus);
+    bus.write(address, A);
+    
+    cycles += 16;
+}
+void CPU::op_07(BUS &bus){ // RLCA
+    uint8_t carry_flag = (A & 0x80) ? 0x10 : 0x00;
+
+    A = (A << 1) | ((A & 0x80) >> 7);
+    F = carry_flag;
+
+    cycles += 4;
+}
+void CPU::op_FA(BUS &bus){ //LD A, (u16)
+    uint16_t target = Read16bitInline(bus);
+    A = bus.read(target);
+
+    cycles += 16;
+}
+void CPU::cb_40(BUS &bus){ //BIT 0, B
+    uint8_t zero_flag = ((B & 0x01) == 0) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x00;
+    uint8_t half_carry = 0x20; 
+
+    F = (F & 0x10) | zero_flag | subtract_flag | half_carry;
+
+    cycles += 8;
+}
+void CPU::cb_48(BUS &bus){ //BIT 1, B
+    uint8_t zero_flag = ((B & 0x02) == 0) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x00;
+    uint8_t half_carry = 0x20; 
+
+    F = (F & 0x10) | zero_flag | subtract_flag | half_carry;
+
+    cycles += 8;
+}
+void CPU::cb_50(BUS &bus){ //BIT 2, B
+    uint8_t zero_flag = ((B & 0x04) == 0) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x00;
+    uint8_t half_carry = 0x20; 
+
+    F = (F & 0x10) | zero_flag | subtract_flag | half_carry;
+
+    cycles += 8;
+}
+void CPU::op_4F(BUS &bus){
+    C = A;
+    cycles += 4;
+}
