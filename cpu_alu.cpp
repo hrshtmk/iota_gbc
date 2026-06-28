@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <sched.h>
 #include <sys/types.h>
-#include <system_error>
 
 void CPU::op_00(BUS &bus){ //NOP
     cycles += 4;
@@ -300,7 +299,53 @@ void CPU::op_F0(BUS &bus){ //LD A,(FF00+u8)
     A = bus.read(0xFF00+offset);
     cycles += 12;
 }
-void CPU::op_49(BUS &bus){
+void CPU::op_49(BUS &bus){ //LD C, C
     C = C;
     cycles += 4;
+}
+void CPU::op_7E(BUS &bus){ //LD A,(HL)
+    A = bus.read(HL);
+    cycles += 8;
+}
+void CPU::op_B0(BUS &bus){ //OR A, B
+    A = A | B;
+    uint8_t zero_flag = (A==0) ? 0x80 : 0x00;
+    F = zero_flag;
+    cycles += 4;
+}
+void CPU::op_0F(BUS &bus){ //RRCA
+    uint8_t carry_flag = A & 0x01;
+    A = (A >> 1) | (carry_flag << 7);
+    F = (carry_flag) ? 0x10 : 0x00;
+    cycles += 4;
+}
+void CPU::cb_49(BUS &bus){ //BIT 1, C
+    uint8_t zero_flag = ((C & 0x02) == 0) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x00;
+    uint8_t half_carry = 0x20; 
+
+    F = (F & 0x10) | zero_flag | subtract_flag | half_carry;
+
+    cycles += 8;
+}
+void CPU::cb_37(BUS &bus){ //SWAP A
+    uint8_t prev_A = A;
+    A = (prev_A >> 4) | (prev_A << 4);
+
+    uint8_t zero_flag = (A == 0) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x00;
+    uint8_t half_carry = 0x00;
+
+    F = zero_flag | subtract_flag | half_carry;
+
+    cycles += 8;
+}
+void CPU::cb_41(BUS &bus){ //BIT 0, C
+    uint8_t zero_flag = ((C & 0x01) == 0) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x00;
+    uint8_t half_carry = 0x20; 
+
+    F = (F & 0x10) | zero_flag | subtract_flag | half_carry;
+
+    cycles += 8;
 }
