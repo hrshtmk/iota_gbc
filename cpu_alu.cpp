@@ -1,6 +1,9 @@
 #include "bus.hpp"
 #include "cpu.hpp"
 #include <cstdint>
+#include <sched.h>
+#include <sys/types.h>
+#include <system_error>
 
 void CPU::op_00(BUS &bus){ //NOP
     cycles += 4;
@@ -262,4 +265,42 @@ void CPU::op_FE(BUS &bus){ //CP A, u8
     F = zero_flag | subtract_flag | half_carry | carry_flag;
 
     cycles += 8;
+}
+void CPU::op_34(BUS &bus){ //LD B, H
+    B = H;
+    cycles += 4;
+}
+void CPU::op_06(BUS &bus){ //LD B, u8
+    B = Read8bitInline(bus);
+    cycles += 8;
+}
+void CPU::op_05(BUS &bus){ //DEC B
+    uint8_t prev_B = B;
+    B--;
+    
+    uint8_t zero_flag = (B == 0) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x40;
+    uint8_t half_carry = ((prev_B & 0x0F) == 0x00) ? 0x20 : 0x00; 
+    
+    F = (F & 0x10) | zero_flag | subtract_flag | half_carry;
+    
+    cycles += 4;
+}
+void CPU::op_E6(BUS &bus){ //AND A, u8
+    uint8_t u8 = bus.read(PC);
+    A = A & u8;
+    uint8_t zero_flag = (A==0) ? 0x80 : 0x00;
+    uint16_t half_carry = 0x20;
+    F = zero_flag | half_carry;
+
+    cycles += 8;
+}
+void CPU::op_F0(BUS &bus){ //LD A,(FF00+u8)
+    uint8_t offset = Read8bitInline(bus);
+    A = bus.read(0xFF00+offset);
+    cycles += 12;
+}
+void CPU::op_49(BUS &bus){
+    C = C;
+    cycles += 4;
 }
