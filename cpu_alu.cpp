@@ -245,3 +245,21 @@ void CPU::op_23(BUS &bus){ //INC HL
     HL++;
     cycles += 8;
 }
+void CPU::op_13(BUS &bus){ //INC DE
+    DE++;
+    cycles += 8;
+}
+void CPU::op_7B(BUS &bus){ //LD A, E
+    A = E;
+    cycles += 4;
+}
+void CPU::op_FE(BUS &bus){ //CP A, u8
+    uint8_t u8 = bus.read(PC);
+    uint8_t zero_flag = (A == u8) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x40;
+    uint8_t half_carry = ((A & 0x0F) < (u8 & 0x0F)) ? 0x20 : 0x00;
+    uint8_t carry_flag = (A < u8) ? 0x10 : 0x00;
+    F = zero_flag | subtract_flag | half_carry | carry_flag;
+
+    cycles += 8;
+}
