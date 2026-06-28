@@ -306,8 +306,7 @@ void CPU::op_F0(BUS &bus){ //LD A,(FF00+u8)
     A = bus.read(0xFF00+offset);
     cycles += 12;
 }
-void CPU::op_49(BUS &bus){ //LD C, C
-    C = C;
+void CPU::op_49(BUS &bus){ //LD C, C (NOP-like)
     cycles += 4;
 }
 void CPU::op_7E(BUS &bus){ //LD A,(HL)
@@ -361,7 +360,7 @@ void CPU::op_79(BUS &bus){
     cycles += 4;
 }
 void CPU::op_18(BUS &bus){ //JR i8
-    uint8_t offset = static_cast<int8_t>(Read8bitInline(bus));
+    int8_t offset = static_cast<int8_t>(Read8bitInline(bus));
     PC += offset;
     cycles += 12;
 }
@@ -515,4 +514,21 @@ void CPU::cb_50(BUS &bus){ //BIT 2, B
 void CPU::op_4F(BUS &bus){
     C = A;
     cycles += 4;
+}
+void CPU::cb_86(BUS &bus){ // RES 0, (HL)
+    uint8_t value = bus.read(HL);
+    value &= ~0x01;
+    bus.write(HL, value);
+
+    cycles += 16;
+}
+void CPU::cb_46(BUS &bus){ //BIT 0, (HL)
+    uint8_t target = bus.read(HL);
+    uint8_t zero_flag = ((target & 0x01) == 0) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x00;
+    uint8_t half_carry = 0x20; 
+
+    F = (F & 0x10) | zero_flag | subtract_flag | half_carry;
+
+    cycles += 12;
 }

@@ -25,6 +25,7 @@ CPU::CPU() {
 void CPU::ExecNextOpcode(BUS &bus) {
     uint8_t opcode = bus.read(PC);
     PC++;
+    DBGprintAllOP(bus); //debug.
     (this->*OPCodeTable[opcode])(bus);
 }
 
@@ -64,5 +65,6 @@ uint16_t CPU::Read16bitInline(BUS &bus) {
 }
 int i = 0;
 void CPU::DBGprintAllOP(BUS &bus){
-    printf("%d) Executing Opcode: 0x%02X at PC: 0x%04X | SP: 0x%04X | Cycles: %d\n",i, bus.read(PC), PC, SP, cycles);
+    printf("%d) Executing Opcode: 0x%02X at PC: 0x%04X | SP: 0x%04X | Cycles: %d\n",i, bus.read(PC-1), PC, SP, cycles);
+    i++;
 }
