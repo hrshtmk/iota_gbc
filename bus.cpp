@@ -48,7 +48,47 @@ void BUS::SVBKwrite(uint8_t value) {
 
 // Reading value at address.
 uint8_t BUS::read(uint16_t address) const {
-    //TODO with Banking.
+    //ROM Space.
+    if (address < 0x8000){
+        if (address < CartridgeRom.size()){
+            return CartridgeRom[address];
+        }
+        return 0xFF;
+    }
+    
+    //VRAM Banked.
+    if (address>=0x8000 && address<=0x9FFF) return VRAMBanks[VRAMBankSelect][address-0x8000];
+    
+    //External RAM.
+    if (address>=0xA000 && address<=0xBFFF) return 0xFF;
+
+    //WRAM Bank 0 FIXED.
+    if (address>=0xC000 && address<=0xCFFF) return WRAMBanks[0][address-0xC000];
+    //WRAM Bank 1-7 SWITCH.
+    if (address>=0xD000 && address<=0xDFFF) return WRAMBanks[WRAMBankSelect][address-0xD000];
+
+    //Echo RAM.
+    if (address>=0xE000 && address<=0xFDFF) {
+        uint16_t target = address - 0x2000;
+        return read(target);
+    }
+
+    //OAM.
+    if (address>=0xFE00 && address<=0xFE9F) return OAM[address-0xFE00];
+
+    //EMPTY.
+    if (address>=0xFEA0 && address<=0xFEFF) return 0xFF;
+
+    //IO Registers.
+    if (address>=0xFF00 && address<=0xFF7F) return IORegisters[address&0x7F];
+
+    //HRAM.
+    if (address>=0xFF80 && address<=0xFFFE) return HRAM[address-0xFF80];
+
+    //Interrupt Enable Register.
+    if (address==0xFFFF) return IERegister;
+
+    return 0xFF;
 }
 
 // Writing value at address.
