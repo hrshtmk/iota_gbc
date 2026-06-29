@@ -93,7 +93,64 @@ uint8_t BUS::read(uint16_t address) const {
 
 // Writing value at address.
 void BUS::write(uint16_t address, uint8_t value){
-    //TODO.
+    //Read Only.
+    if (address<0x8000) return;
+
+    // VRAM
+    if (address>=0x8000 && address<=0x9FFF) {
+        VRAMBanks[VRAMBankSelect][address-0x8000] = value;
+        return;
+    }
+    
+    // External RAM
+    if (address>=0xA000 && address<=0xBFFF) return;
+    
+    // WRAM Bank 0
+    if (address>=0xC000 && address<=0xCFFF) {
+        WRAMBanks[0][address-0xC000] = value;
+        return;
+    }
+    
+    // WRAM Bank 1-7
+    if (address>=0xD000 && address<=0xDFFF) {
+        WRAMBanks[WRAMBankSelect][address-0xD000] = value;
+        return;
+    }
+    
+    // Echo RAM
+    if (address>=0xE000 && address<=0xFDFF) {
+        write(address-0x2000, value);
+        return;
+    }
+    
+    // OAM
+    if (address>=0xFE00 && address<=0xFE9F) {
+        OAM[address-0xFE00] = value;
+        return;
+    }
+    
+    if (address>=0xFEA0 && address<=0xFEFF) return;
+    
+    // IO Registers
+    if (address>=0xFF00 && address<=0xFF7F) {
+        uint8_t offset = address & 0x7F;
+        if (IOregisterTable[offset] != nullptr) {
+            (this->*IOregisterTable[offset])(value);
+        } else {
+            IORegisters[offset] = value;
+        }
+        return;
+    }
+    // HRAM
+    if (address>=0xFF80 && address<=0xFFFE) {
+        HRAM[address-0xFF80] = value;
+        return;
+    }
+    // IE Register
+    if (address==0xFFFF) {
+        IERegister = value;
+        return;
+    }
 }
 
 // File handling.
