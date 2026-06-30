@@ -20,9 +20,6 @@ int main() {
         uint32_t elapsed_cycles = cpu.cycles - cycles_before;
 
         ppu.Tick(elapsed_cycles, bus);
-        // if (bus.read(0xFF44) > 0) {
-        //         std::cout << "CPU read LY: " << (int)bus.read(0xFF44) << std::endl;
-        // }
         if (ppu.FrameReady){
             ppu.FrameReady = false;
         }

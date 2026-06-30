@@ -9,7 +9,7 @@ PPU::PPU(){
     fill(begin(FrameBuffer), end(FrameBuffer), 0x555555FF);
 }
 void PPU::SetMode(PPUMode mode){
-    STAT = (STAT & 0xF4) | static_cast<uint8_t>(mode);
+    STAT = (STAT & 0xFC) | static_cast<uint8_t>(mode);
 }
 void PPU::RequestInterrupt(BUS&bus, uint8_t InterruptBit){
     uint8_t if_reg = bus.read(0xFF0F);
@@ -34,9 +34,7 @@ void PPU::Tick(uint32_t cycles, BUS&bus){
                 SetMode(PPUMode::HBlank);
                 if (STAT&0x08) RequestInterrupt(bus, 1);
 
-                if (DotClock>=252 && DotClock-cycles < 252){
-                    RenderScanline(bus);
-                }
+                RenderScanline(bus);
             }
         }
     }
@@ -45,7 +43,7 @@ void PPU::Tick(uint32_t cycles, BUS&bus){
             SetMode(PPUMode::VBlank);
             RequestInterrupt(bus, 0);
             if (STAT & 0x10) RequestInterrupt(bus, 1);
-            FrameReady = 1;
+            FrameReady = false;
         }
     }
     if (DotClock >= 456){
@@ -63,18 +61,26 @@ void PPU::Tick(uint32_t cycles, BUS&bus){
 
     if (LY>153){
         LY = 0;
-        FrameReady = false;
+        FrameReady = true;
+    }
+
+    if (LY == LYC){
+        STAT |= 0x04;
+        if (STAT & 0x40) RequestInterrupt(bus, 1);
+    }
+    else {
+        STAT &= ~0x04;
     }
 }
 
 void PPU::RenderScanline(BUS& bus) {
     // Placeholder, debug only for now.
     for (int x = 0; x < WIDTH; ++x) {
-        uint8_t r = x * 1.5;
-        uint8_t g = LY * 1.5;
+        uint8_t r = (x * 3) / 2;
+        uint8_t g = (LY * 3) / 2;
         uint8_t b = 128;
-        
-        FrameBuffer[LY*WIDTH+x] = (r<<24) | (g<<16) | (b<<8) | 0xFF;
+    
+        FrameBuffer[LY * WIDTH + x] = (r << 24) | (g << 16) | (b << 8) | 0xFF;
     }
 }
 
@@ -103,7 +109,7 @@ void PPU::WriteRegister(uint16_t address, uint8_t value) {
         case 0xFF42: SCY = value; break;
         case 0xFF43: SCX = value; break;
         case 0xFF44: break; // LY is read-only from CPU perspective
-        case 0xFF45: LY = value; break;
+        case 0xFF45: LYC = value; break;
         case 0xFF47: BGP = value; break;
         case 0xFF48: OBP0 = value; break;
         case 0xFF49: OBP1 = value; break;

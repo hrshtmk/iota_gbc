@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/boot_run.dir/link.d CMakeFiles/boot_run.dir/main.cpp.o CMakeFiles/boot_run.dir/bus.cpp.o CMakeFiles/boot_run.dir/cpu.cpp.o CMakeFiles/boot_run.dir/cpu_alu.cpp.o CMakeFiles/boot_run.dir/ppu.cpp.o -o boot_run

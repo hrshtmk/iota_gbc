@@ -1,0 +1,3 @@
+/home/hrsht/Desktop/Work/cpp/gbc/build/CMakeFiles/boot_run.dir
+/home/hrsht/Desktop/Work/cpp/gbc/build/CMakeFiles/edit_cache.dir
+/home/hrsht/Desktop/Work/cpp/gbc/build/CMakeFiles/rebuild_cache.dir
