@@ -3,9 +3,10 @@
 #include <string>
 #include <vector>
 using namespace std;
-
+class PPU;
 class BUS {
     public:
+        friend class PPU;
         BUS();
         bool loadRom(const std::string& filename);
         uint8_t read(uint16_t address) const;
