@@ -532,3 +532,142 @@ void CPU::cb_46(BUS &bus){ //BIT 0, (HL)
 
     cycles += 12;
 }
+void CPU::cb_7E(BUS&bus){ //BIT 7, (HL)
+    uint8_t value = bus.read(HL);
+    uint8_t bit7 = value & 0x80;
+
+    uint8_t zero_flag = (bit7 == 0) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x00;
+    uint8_t half_carry = 0x20;
+    F = (F & 0x10) | zero_flag | subtract_flag | half_carry;
+
+    cycles += 12;    
+}
+void CPU::op_CC(BUS &bus){ //CALL Z, u16
+    uint16_t target = Read16bitInline(bus);
+    if ((F&0x80)!=0){
+        uint16_t ret_add = PC;
+        SP--;
+        bus.write(SP, (ret_add>>8)&0xFF);
+        SP--;
+        bus.write(SP, ret_add & 0xFF);
+        PC = target;
+        cycles += 24;
+    }
+    else cycles += 12;
+}
+void CPU::op_A1(BUS &bus){ //AND A, C
+    A = A & C;
+    uint8_t zero_flag = (A==0) ? 0x80 : 0x00;
+    uint16_t half_carry = 0x20;
+    F = zero_flag | half_carry;
+
+    cycles += 4;
+}
+void CPU::op_A9(BUS &bus){ //XOR A, C
+    A = A ^ C;
+    uint8_t zero_flag = (A == 0) ? 0x80 : 0x00;
+    F = zero_flag;
+    cycles += 4;
+}
+void CPU::op_32(BUS &bus){ //LD (HL-), A
+    bus.write(HL, A);
+    HL--;
+    cycles += 8;
+}
+void CPU::op_77(BUS &bus){ //LD (HL), A
+    bus.write(HL, A);
+    cycles += 8;
+}
+void CPU::op_78(BUS &bus){ //LD A, B
+    A = B;
+    cycles += 4;
+}
+void CPU::op_04(BUS &bus){ //INC B
+    uint8_t prev_B = B;
+    B++;
+    
+    uint8_t zero_flag = (B==0) ? 0x80 : 0x00;
+    uint8_t half_carry = ((prev_B & 0x0F) == 0x0F) ? 0x20 : 0x00;
+    F = (F & 0x10) | zero_flag | half_carry;
+    
+    cycles += 4;
+}
+void CPU::op_D6(BUS &bus) { // SUB A, u8
+    uint8_t value = Read8bitInline(bus);
+    uint8_t result = A - value;
+
+    uint8_t zero_flag = (result == 0) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x40;
+    uint8_t half_carry = ((A & 0x0F) < (value & 0x0F)) ? 0x20 : 0x00;
+    uint8_t carry_flag = (A < value) ? 0x10 : 0x00;
+
+    A = result;
+    F = zero_flag | subtract_flag | half_carry | carry_flag;
+
+    cycles += 8;
+}
+void CPU::op_D7(BUS &bus) { // RST 10h
+    uint16_t ret_add = PC;
+    SP--;
+    bus.write(SP, (ret_add >> 8) & 0xFF);
+    SP--;
+    bus.write(SP, ret_add & 0xFF);
+    
+    PC = 0x0010; // NOTE: for other RST NNh, jut change the PC = 0x00NN.
+
+    cycles += 16;
+}
+void CPU::op_D2(BUS &bus) { // JP NC, u16
+    uint16_t target = Read16bitInline(bus);
+    if ((F & 0x10) == 0) {
+        PC = target;
+        cycles += 16;
+    } else {
+        cycles += 12;
+    }
+}
+void CPU::op_C2(BUS &bus) { // JP NZ, u16
+    uint16_t target = Read16bitInline(bus);
+    if ((F & 0x80) == 0) {
+        PC = target;
+        cycles += 16;
+    } else {
+        cycles += 12;
+    }
+}
+void CPU::op_CA(BUS &bus){ //JP Z, u16
+    uint16_t target = Read16bitInline(bus);
+    if ((F & 0x80) != 0) {
+        PC = target;
+        cycles += 16;
+    } else {
+        cycles += 12;
+    }
+}
+void CPU::op_7D(BUS &bus){ //LD A, L
+    A = L;
+    cycles += 4;
+}
+void CPU::op_B1(BUS &bus){ //OR A, C
+    A = A | C;
+    uint8_t zero_flag = (A==0) ? 0x80 : 0x00;
+    F = zero_flag;
+    cycles += 4;
+}
+void CPU::op_F2(BUS &bus) { // LD A, (FF00+C)
+    uint16_t target = 0xFF00 + C;
+    A = bus.read(target);
+
+    cycles += 8;
+}
+void CPU::op_BE(BUS &bus){ //CP A, (HL)
+    uint8_t target = bus.read(HL);
+    uint8_t zero_flag = (A == target) ? 0x80 : 0x00;
+    uint8_t subtract_flag = 0x40;
+    uint8_t half_carry = ((A & 0x0F) < (target & 0x0F)) ? 0x20 : 0x00;
+    uint8_t carry_flag = (A < target) ? 0x10 : 0x00;
+    F = zero_flag | subtract_flag | half_carry | carry_flag;
+
+    cycles += 4;
+}

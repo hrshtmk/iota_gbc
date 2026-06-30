@@ -6,14 +6,15 @@ using namespace std;
 class PPU;
 class BUS {
     public:
-        friend class PPU;
         BUS();
         bool loadRom(const std::string& filename);
         uint8_t read(uint16_t address) const;
         void write(uint16_t address, uint8_t value);
+        void ConnectPPU(PPU* ppuPTR);
 
     private:
-        
+        friend class PPU;
+        PPU* ppu = nullptr;
         vector<uint8_t> CartridgeRom;
         uint8_t VRAMBanks[2][8192]; //Video RAM: 2 Banks of 8KB.
         uint8_t WRAMBanks[8][4096]; //Work RAM: 8 Banks of 4KB.

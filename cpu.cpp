@@ -25,7 +25,7 @@ CPU::CPU() {
 void CPU::ExecNextOpcode(BUS &bus) {
     uint8_t opcode = bus.read(PC);
     PC++;
-    DBGprintAllOP(bus); //debug.
+    // DBGprintAllOP(bus); //debug.
     (this->*OPCodeTable[opcode])(bus);
 }
 

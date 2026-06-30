@@ -1,4 +1,5 @@
 #include "bus.hpp"
+#include "ppu.hpp"
 #include <cstdint>
 #include <fstream>
 #include <iostream>
@@ -46,6 +47,9 @@ void BUS::SVBKwrite(uint8_t value) {
     IORegisters[0x70] = value;
 }
 
+void BUS::ConnectPPU(PPU* ppuPTR){
+    ppu = ppuPTR;
+}
 // Reading value at address.
 uint8_t BUS::read(uint16_t address) const {
     //ROM Space.
@@ -80,7 +84,12 @@ uint8_t BUS::read(uint16_t address) const {
     if (address>=0xFEA0 && address<=0xFEFF) return 0xFF;
 
     //IO Registers.
-    if (address>=0xFF00 && address<=0xFF7F) return IORegisters[address&0x7F];
+    if (address>=0xFF00 && address<=0xFF7F){
+        if (address>=0xFF40 && address <= 0xFF4B && ppu != nullptr){
+            return ppu->ReadRegister(address);
+        }
+        return IORegisters[address&0x7F];
+    }
 
     //HRAM.
     if (address>=0xFF80 && address<=0xFFFE) return HRAM[address-0xFF80];
@@ -133,6 +142,10 @@ void BUS::write(uint16_t address, uint8_t value){
     
     // IO Registers
     if (address>=0xFF00 && address<=0xFF7F) {
+        if (address>=0xFF40 && address<=0xFF4B && ppu != nullptr){
+            ppu->WriteRegister(address, value);
+            return;
+        }
         uint8_t offset = address & 0x7F;
         if (IOregisterTable[offset] != nullptr) {
             (this->*IOregisterTable[offset])(value);
